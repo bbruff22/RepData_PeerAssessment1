@@ -68,3 +68,15 @@ sum(is.na(activityData$steps))
 ```{r}
 str(activityData)
 ```
+
+###Create a histogram of the total number of steps taken each day after missing values are imputed
+```{r}
+steps3<-with(activityData,tapply(steps,date,sum,na.rm=TRUE))
+hist(steps3,col = "grey",xlab = "Steps",ylab = "Frequency",main = "Total Steps per Day")
+```
+
+###Mean and median of the total steps taken each day
+```{r}
+print(meanSteps <- mean(steps3))
+print(medianSteps <- median(steps3))
+```
