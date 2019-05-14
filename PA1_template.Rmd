@@ -13,7 +13,6 @@ require(ggplot2)
 
 ###Read in the dataset 
 ```{r}
-setwd("~/Desktop/Coursera Files/Course5_ReproRsrch")
 activityData<-read.csv("./data/activity.csv", stringsAsFactors = FALSE)
 activityData$date <- as.Date(activityData$date)
 str(activityData)
