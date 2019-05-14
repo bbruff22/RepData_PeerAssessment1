@@ -80,3 +80,22 @@ hist(steps3,col = "grey",xlab = "Steps",ylab = "Frequency",main = "Total Steps p
 print(meanSteps <- mean(steps3))
 print(medianSteps <- median(steps3))
 ```
+###Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+#create a new variable in the dataset named "day" that shows the day of the week in terms of weekday or weekend.
+```{r}
+#activityData <- mutate(activityData, day = ifelse(weekdays(as.Date(activityData$date)) == "Saturday" | weekdays(as.Date(activityData$date)) == "Sunday", "weekend", "weekday"))
+#activityData$day <- as.factor(activityData$day)
+#str(activityData)
+```
+
+
+###Panel plot the weekday and weekend data in seperate graphs
+```{r}
+activityData <- activityData %>% mutate(day = weekdays(date)) %>%
+  mutate(dayFact = ifelse(day == "Saturday" | day == "Sunday", "Weekend", "Weekday"))
+## By Weekday vs. Weekend 
+activityData %>% group_by(dayFact, interval) %>% mutate(meanStepsInterval = mean(steps)) %>%
+  ggplot(aes(x = interval, y = meanStepsInterval)) + geom_line() +
+  facet_wrap(~dayFact, ncol = 1, nrow=2) + ggtitle("Mean Steps by Interval: Weekday vs. Weekend") + 
+  xlab("Interval") + ylab("Mean Steps") 
+```
