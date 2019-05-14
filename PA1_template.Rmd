@@ -13,6 +13,7 @@ require(ggplot2)
 
 ###Read in the dataset 
 ```{r}
+setwd("~/Desktop/Coursera Files/Course5_ReproRsrch")
 activityData<-read.csv("./data/activity.csv", stringsAsFactors = FALSE)
 activityData$date <- as.Date(activityData$date)
 str(activityData)
@@ -42,4 +43,28 @@ plot(asByI$interval,asByI$avgSteps,type = "o",xlab = "Intervals",
 intAndSteps <- asByI[which.max(asByI$avgSteps),] #this is correct at 835
 print(intAndSteps)
 print(medianSteps <- median(sByd$steps2))
+```
+
+###Imputing missing data
+#Strategy: Calculate the average of average steps per day across all dates in the data set (ignoring NA values). Then use the resulting value in place of NAs.
+
+```{r}
+sum(is.na(activityData$steps))
+
+idx <- which(is.na(activityData$steps))
+l <- length(idx)
+stepsAvg <- with(activityData,tapply(steps,date,mean,na.rm=TRUE))
+activityData %>% group_by(date) %>% summarise(avgSteps = mean(steps, na.rm = TRUE))
+
+stepsMean <- mean(stepsAvg,na.rm = TRUE)
+for (i in 1:l) {
+  activityData[idx,"steps"] <- stepsMean
+}
+
+sum(is.na(activityData$steps))
+```
+
+### We have zero NAs which means we have successfully filled all missing data and new dataset looks like as follows
+```{r}
+str(activityData)
 ```
