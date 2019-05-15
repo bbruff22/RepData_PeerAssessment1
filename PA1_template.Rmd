@@ -1,87 +1,97 @@
----
-title: "PA1_template"
-author: "BB"
-date: "5/12/2019"
-output: html_document
----
-###Requirement 1: Code for reading in the dataset and/or processing the data
-####include dplyr and ggplot2 packages
-```{r}
+##Reproducible Research Project 1
+
+####Requirement 1: Code for reading in the dataset and/or processing the data
+#####include dplyr and ggplot2 packages
+```{r, echo=FALSE}
 require(dplyr)
 require(ggplot2)
 ```
 
-###Read in the dataset 
+####Read in the dataset 
 ```{r}
 setwd("~/Desktop/Coursera Files/Course5_ReproRsrch")
 activityData<-read.csv("./data/activity.csv", stringsAsFactors = FALSE)
 activityData$date <- as.Date(activityData$date)
 str(activityData)
 ```
-###Requirement 2: Histogram of the total number of steps taken each day
-###What is mean total number of steps taken per day?
+
+####Requirement 2: Histogram of the total number of steps taken each day
 ```{r}
 sByd <- activityData %>% group_by(date) %>% summarise(steps2 = sum(steps, na.rm = TRUE))
 hist(sByd$steps2,col = 'grey',xlab = "Steps",ylab = "Frequency",main = "Total Steps per Day")
 ```
-###Mean and median number of steps taken each day
+
+####Requirement 3: What are the mean and median number of steps taken each day?
 ```{r}
 print(meanSteps <- mean(sByd$steps2))
 print(medianSteps <- median(sByd$steps2))
 ```
 
-###Time series plot of the average number of steps taken
-###What is the average daily activity pattern?
+####Requirement 4: Time series plot of the average number of steps taken
+#####What is the average daily activity pattern?
 ```{r}
 asByI <- activityData %>% group_by(interval) %>% summarise(avgSteps = mean(steps, na.rm = TRUE))
-plot(asByI$interval,asByI$avgSteps,type = "o",xlab = "Intervals",
+plot(asByI$interval,asByI$avgSteps,type = "l",xlab = "Interval",
      ylab = "Average Steps",main = "Average Steps per Interval")
 ```
 
-###Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+####Requirement 5: The 5-minute interval that, on average, contains the maximum number of steps?
 ```{r}
 intAndSteps <- asByI[which.max(asByI$avgSteps),] #this is correct at 835
 print(intAndSteps)
 print(medianSteps <- median(sByd$steps2))
 ```
 
-###Imputing missing data
-#Strategy: Calculate the average of average steps per day across all dates in the data set (ignoring NA values). Then use the resulting value in place of NAs.
-
+####Requirement 5: Imputing missing data  !!! need new dataset
+#####Strategy: Calculate the average of average steps per day across all dates in the data set (ignoring NA values). Then use the resulting value in place of NAs.
+######Determine the number of NAs
 ```{r}
 sum(is.na(activityData$steps))
+```
 
+#####Copy existing dataframe as activityData2
+```{r}
+activityData2 <- activityData
+```
+
+```{r}
 idx <- which(is.na(activityData$steps))
 l <- length(idx)
 stepsAvg <- with(activityData,tapply(steps,date,mean,na.rm=TRUE))
 activityData %>% group_by(date) %>% summarise(avgSteps = mean(steps, na.rm = TRUE))
 
+#####Add values to the new dataframe, replacing NAs
 stepsMean <- mean(stepsAvg,na.rm = TRUE)
 for (i in 1:l) {
   activityData[idx,"steps"] <- stepsMean
 }
-
-sum(is.na(activityData$steps))
 ```
 
-### We have zero NAs which means we have successfully filled all missing data and new dataset looks like as follows
+#####We have zero NAs in new dataframe, same amount in the original
+```{r}
+sum(is.na(activityData$steps))
+sum(is.na(activityData2$steps))
+```
+
+#####Get the characteristics of our original dataframe and our new dataframe
 ```{r}
 str(activityData)
+str(activityData2)
 ```
 
-###Create a histogram of the total number of steps taken each day after missing values are imputed
+####Requirement 7: Histogram of the total number of steps taken each day after missing values are imputed
 ```{r}
 steps3<-with(activityData,tapply(steps,date,sum,na.rm=TRUE))
 hist(steps3,col = "grey",xlab = "Steps",ylab = "Frequency",main = "Total Steps per Day")
 ```
 
-###Mean and median of the total steps taken each day
+####Mean and median of the total steps taken each day
 ```{r}
 print(meanSteps <- mean(steps3))
 print(medianSteps <- median(steps3))
 ```
-###Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
-#create a new variable in the dataset named "day" that shows the day of the week in terms of weekday or weekend.
+####Requirement 8: Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+#####create a new variable in the dataset named "day" that shows the day of the week in terms of weekday or weekend.
 ```{r}
 #activityData <- mutate(activityData, day = ifelse(weekdays(as.Date(activityData$date)) == "Saturday" | weekdays(as.Date(activityData$date)) == "Sunday", "weekend", "weekday"))
 #activityData$day <- as.factor(activityData$day)
@@ -89,7 +99,7 @@ print(medianSteps <- median(steps3))
 ```
 
 
-###Panel plot the weekday and weekend data in seperate graphs
+####Panel plot the weekday and weekend data in seperate graphs
 ```{r}
 activityData <- activityData %>% mutate(day = weekdays(date)) %>%
   mutate(dayFact = ifelse(day == "Saturday" | day == "Sunday", "Weekend", "Weekday"))
@@ -99,3 +109,4 @@ activityData %>% group_by(dayFact, interval) %>% mutate(meanStepsInterval = mean
   facet_wrap(~dayFact, ncol = 1, nrow=2) + ggtitle("Mean Steps by Interval: Weekday vs. Weekend") + 
   xlab("Interval") + ylab("Mean Steps") 
 ```
+#####There is clearly more activity during the weekend versus weekdays. There is more opportunity to be active when one is not engaged in typical work activities of the week.
