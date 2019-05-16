@@ -2,7 +2,7 @@
 
 ####Requirement 1: Code for reading in the dataset and/or processing the data
 #####include dplyr and ggplot2 packages
-```{r, echo=FALSE}
+```{r, echo = FALSE}
 require(dplyr)
 require(ggplot2)
 ```
@@ -37,12 +37,12 @@ plot(asByI$interval,asByI$avgSteps,type = "l",xlab = "Interval",
 
 ####Requirement 5: The 5-minute interval that, on average, contains the maximum number of steps?
 ```{r}
-intAndSteps <- asByI[which.max(asByI$avgSteps),] #this is correct at 835
+intAndSteps <- asByI[which.max(asByI$avgSteps),] 
 print(intAndSteps)
-print(medianSteps <- median(sByd$steps2))
 ```
+#####The interval is 835.
 
-####Requirement 5: Imputing missing data  !!! need new dataset
+####Requirement 6: Imputing missing data
 #####Strategy: Calculate the average of average steps per day across all dates in the data set (ignoring NA values). Then use the resulting value in place of NAs.
 ######Determine the number of NAs
 ```{r}
@@ -58,7 +58,8 @@ activityData2 <- activityData
 idx <- which(is.na(activityData$steps))
 l <- length(idx)
 stepsAvg <- with(activityData,tapply(steps,date,mean,na.rm=TRUE))
-activityData %>% group_by(date) %>% summarise(avgSteps = mean(steps, na.rm = TRUE))
+#activityData %>% group_by(date) %>% summarise(avgSteps = mean(steps, 
+#na.rm = TRUE))
 
 #####Add values to the new dataframe, replacing NAs
 stepsMean <- mean(stepsAvg,na.rm = TRUE)
@@ -91,22 +92,18 @@ print(meanSteps <- mean(steps3))
 print(medianSteps <- median(steps3))
 ```
 ####Requirement 8: Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
-#####create a new variable in the dataset named "day" that shows the day of the week in terms of weekday or weekend.
-```{r}
-#activityData <- mutate(activityData, day = ifelse(weekdays(as.Date(activityData$date)) == "Saturday" | weekdays(as.Date(activityData$date)) == "Sunday", "weekend", "weekday"))
-#activityData$day <- as.factor(activityData$day)
-#str(activityData)
-```
-
-
-####Panel plot the weekday and weekend data in seperate graphs
+#####Create a new variable in the dataset named "day" that shows the day of the week in terms of weekday or weekend
 ```{r}
 activityData <- activityData %>% mutate(day = weekdays(date)) %>%
   mutate(dayFact = ifelse(day == "Saturday" | day == "Sunday", "Weekend", "Weekday"))
-## By Weekday vs. Weekend 
+```
+
+####Panel plot the weekday and weekend data in seperate graphs
+```{r}
 activityData %>% group_by(dayFact, interval) %>% mutate(meanStepsInterval = mean(steps)) %>%
   ggplot(aes(x = interval, y = meanStepsInterval)) + geom_line() +
-  facet_wrap(~dayFact, ncol = 1, nrow=2) + ggtitle("Mean Steps by Interval: Weekday vs. Weekend") + 
+  facet_wrap(~dayFact, ncol = 1, nrow=2) + ggtitle("Weekday vs. Weekend Mean Steps by Interval, Compared") + 
   xlab("Interval") + ylab("Mean Steps") 
 ```
-#####There is clearly more activity during the weekend versus weekdays. There is more opportunity to be active when one is not engaged in typical work activities of the week.
+
+####There is clearly more activity during the weekend versus weekdays. For those with more traditional workday work hours, there is more opportunity to be active on the weekend.
