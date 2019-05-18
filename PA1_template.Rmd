@@ -1,109 +1,227 @@
-##Reproducible Research Project 1
+###Reproducible Research Project 1
+
+####(From Coursera site) "It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the "quantified self" movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+
+####"This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day."
+
+<br/><br/>
 
 ####Requirement 1: Code for reading in the dataset and/or processing the data
-#####include dplyr and ggplot2 packages
+
+#####include package
+
 ```{r, echo = FALSE}
+
 require(dplyr)
-require(ggplot2)
+
 ```
+
+
 
 ####Read in the dataset 
+
 ```{r}
+
 setwd("~/Desktop/Coursera Files/Course5_ReproRsrch")
+
 activityData<-read.csv("./data/activity.csv", stringsAsFactors = FALSE)
+
 activityData$date <- as.Date(activityData$date)
+
 str(activityData)
+
 ```
+
+
+<br/><br/>
 
 ####Requirement 2: Histogram of the total number of steps taken each day
+
 ```{r}
+
 sByd <- activityData %>% group_by(date) %>% summarise(steps2 = sum(steps, na.rm = TRUE))
+
 hist(sByd$steps2,col = 'grey',xlab = "Steps",ylab = "Frequency",main = "Total Steps per Day")
+
 ```
+
+
+<br/><br/>
 
 ####Requirement 3: What are the mean and median number of steps taken each day?
+
 ```{r}
+
 print(meanSteps <- mean(sByd$steps2))
+
 print(medianSteps <- median(sByd$steps2))
+
 ```
+
+
+<br/><br/>
 
 ####Requirement 4: Time series plot of the average number of steps taken
+
 #####What is the average daily activity pattern?
+
 ```{r}
+
 asByI <- activityData %>% group_by(interval) %>% summarise(avgSteps = mean(steps, na.rm = TRUE))
+
 plot(asByI$interval,asByI$avgSteps,type = "l",xlab = "Interval",
+     
      ylab = "Average Steps",main = "Average Steps per Interval")
+
 ```
+
+
+<br/><br/>
 
 ####Requirement 5: The 5-minute interval that, on average, contains the maximum number of steps?
+
 ```{r}
+
 intAndSteps <- asByI[which.max(asByI$avgSteps),] 
+
 print(intAndSteps)
+
 ```
+
 #####The interval is 835.
 
+
+<br/><br/>
+
 ####Requirement 6: Imputing missing data
+
 #####Strategy: Calculate the average of average steps per day across all dates in the data set (ignoring NA values). Then use the resulting value in place of NAs.
+
 ######Determine the number of NAs
+
 ```{r}
+
 sum(is.na(activityData$steps))
+
 ```
+
+
 
 #####Copy existing dataframe as activityData2
+
 ```{r}
+
 activityData2 <- activityData
+
 ```
 
+
+#####Locate NAs in original dataframe
 ```{r}
-idx <- which(is.na(activityData$steps))
-l <- length(idx)
-stepsAvg <- with(activityData,tapply(steps,date,mean,na.rm=TRUE))
-#activityData %>% group_by(date) %>% summarise(avgSteps = mean(steps, 
-#na.rm = TRUE))
 
-#####Add values to the new dataframe, replacing NAs
-stepsMean <- mean(stepsAvg,na.rm = TRUE)
-for (i in 1:l) {
-  activityData[idx,"steps"] <- stepsMean
-}
+idx <- which(is.na(activityData$steps))
+
+l <- length(idx)
+
 ```
+
+
+#####Replace NAs in new dataframe with the mean of the mean across intervals
+```{r}
+stepsAvg <- with(activityData,tapply(steps,date,mean,na.rm=TRUE))
+stepsMean <- mean(stepsAvg,na.rm = TRUE)
+
+for (i in 1:l) {
+  
+  activityData2[idx,"steps"] <- stepsMean
+  
+}
+
+```
+
+
 
 #####We have zero NAs in new dataframe, same amount in the original
+
 ```{r}
+
 sum(is.na(activityData$steps))
+
 sum(is.na(activityData2$steps))
+
 ```
+
+
 
 #####Get the characteristics of our original dataframe and our new dataframe
+
 ```{r}
+
 str(activityData)
+
 str(activityData2)
+
 ```
+
+
+<br/><br/>
 
 ####Requirement 7: Histogram of the total number of steps taken each day after missing values are imputed
+
 ```{r}
-steps3<-with(activityData,tapply(steps,date,sum,na.rm=TRUE))
+
+steps3<-with(activityData2,tapply(steps,date,sum,na.rm=TRUE))
+
 hist(steps3,col = "grey",xlab = "Steps",ylab = "Frequency",main = "Total Steps per Day")
+
 ```
+
+
 
 ####Mean and median of the total steps taken each day
+
 ```{r}
+
 print(meanSteps <- mean(steps3))
+
 print(medianSteps <- median(steps3))
-```
-####Requirement 8: Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
-#####Create a new variable in the dataset named "day" that shows the day of the week in terms of weekday or weekend
-```{r}
-activityData <- activityData %>% mutate(day = weekdays(date)) %>%
-  mutate(dayFact = ifelse(day == "Saturday" | day == "Sunday", "Weekend", "Weekday"))
+
 ```
 
-####Panel plot the weekday and weekend data in seperate graphs
+<br/><br/>
+
+####Requirement 8: Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+
+#####Create a new variable in the dataset named "day" that shows the day of the week in terms of weekday or weekend
+
 ```{r}
-activityData %>% group_by(dayFact, interval) %>% mutate(meanStepsInterval = mean(steps)) %>%
-  ggplot(aes(x = interval, y = meanStepsInterval)) + geom_line() +
-  facet_wrap(~dayFact, ncol = 1, nrow=2) + ggtitle("Weekday vs. Weekend Mean Steps by Interval, Compared") + 
-  xlab("Interval") + ylab("Mean Steps") 
+
+activityData2 <- activityData2 %>% mutate(day = weekdays(date)) %>%
+  
+  mutate(dayType = ifelse(day == "Saturday" | day == "Sunday", "Weekend", "Weekday"))
+
 ```
+
+
+
+####Panel plot the weekday and weekend data in seperate graphs
+
+```{r}
+
+aWday <- subset(activityData2, dayType == "Weekday")
+aWendDay <- subset(activityData2, dayType == "Weekend")
+
+aByaWday <- aggregate(aWday$steps, list(aWday$interval), mean)
+aByaWendDay <- aggregate(aWendDay$steps, list(aWendDay$interval), mean)
+
+par(mfrow=c(2,1),mar=c(4,4,4,4))
+plot(aByaWday$Group.1,aByaWday$x,type = "l",xlab = "Intervals",
+     ylab = "Average Steps",main = "Weekday")
+plot(aByaWendDay$Group.1,aByaWendDay$x,type = "l",xlab = "Intervals",
+     ylab = "Average Steps",main = "Weekend")
+title("Weekday vs. Weekend Mean Steps by Interval",outer = TRUE)
+
+```
+
 
 ####There is clearly more activity during the weekend versus weekdays. For those with more traditional workday work hours, there is more opportunity to be active on the weekend.
